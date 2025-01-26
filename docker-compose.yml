@@ -1,0 +1,13 @@
+services:
+  resume:
+    build: .
+    container_name: resume_app
+    ports:
+      - "5023:5000"
+    volumes:
+      - ./templates:/app/templates
+      - ./static:/app/static
+    environment:
+      FLASK_ENV: production
+    env_file:
+      - .env
