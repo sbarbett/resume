@@ -10,7 +10,7 @@ WORKDIR /app
 COPY . /app
 
 # Install dependencies
-RUN pip install --no-cache-dir flask python-dotenv requests flask-limiter
+RUN pip install --no-cache-dir flask python-dotenv requests flask-limiter markdown
 
 # Expose the Flask port
 EXPOSE 5000
