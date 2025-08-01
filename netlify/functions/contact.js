@@ -1,5 +1,54 @@
 const axios = require('axios');
 
+// Simple in-memory store for rate limiting
+// In production, you might want to use a database or Redis
+const rateLimitStore = new Map();
+
+// Rate limiting: 1 request per 10 minutes per IP
+const RATE_LIMIT_WINDOW = 10 * 60 * 1000; // 10 minutes in milliseconds
+const RATE_LIMIT_MAX_REQUESTS = 1;
+
+function isRateLimited(clientIP) {
+    const now = Date.now();
+    const clientData = rateLimitStore.get(clientIP);
+    
+    if (!clientData) {
+        // First request from this IP
+        rateLimitStore.set(clientIP, {
+            count: 1,
+            firstRequest: now
+        });
+        return false;
+    }
+    
+    // Check if we're still within the rate limit window
+    if (now - clientData.firstRequest < RATE_LIMIT_WINDOW) {
+        if (clientData.count >= RATE_LIMIT_MAX_REQUESTS) {
+            return true; // Rate limited
+        }
+        // Increment count
+        clientData.count++;
+        return false;
+    } else {
+        // Reset rate limit for this IP
+        rateLimitStore.set(clientIP, {
+            count: 1,
+            firstRequest: now
+        });
+        return false;
+    }
+}
+
+// Clean up old entries periodically to prevent memory leaks
+function cleanupRateLimitStore() {
+    const now = Date.now();
+    for (const [ip, data] of rateLimitStore.entries()) {
+        if (now - data.firstRequest > RATE_LIMIT_WINDOW) {
+            rateLimitStore.delete(ip);
+        }
+    }
+}
+
 exports.handler = async (event) => {
     // Only allow POST requests
     if (event.httpMethod !== 'POST') {
@@ -9,6 +58,31 @@ exports.handler = async (event) => {
         };
     }
 
+    // Get client IP for rate limiting
+    const clientIP = event.headers['client-ip'] || 
+                    event.headers['x-forwarded-for'] || 
+                    event.headers['x-real-ip'] || 
+                    'unknown';
+
+    // Check rate limit
+    if (isRateLimited(clientIP)) {
+        return {
+            statusCode: 429,
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            },
+            body: JSON.stringify({ 
+                success: false, 
+                message: "You're doing that too much. Try again later." 
+            })
+        };
+    }
+
+    // Clean up old rate limit entries
+    cleanupRateLimitStore();
+
     try {
         // Parse the request body
         const { name, email, message } = JSON.parse(event.body);
@@ -17,6 +91,11 @@ exports.handler = async (event) => {
         if (!name || !email || !message) {
             return {
                 statusCode: 400,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type'
+                },
                 body: JSON.stringify({ message: 'All fields are required!' })
             };
         }
