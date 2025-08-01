@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shane Barbetta - Resume</title>
+    <link rel="icon" type="image/x-icon" href="static/favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+    <header class="bg-blue-600 text-white py-8 text-center">
+        <h1 class="text-4xl font-bold">Shane Barbetta</h1>
+        <p class="text-xl mt-2">Technical Marketing Engineer</p>
+        <p class="mt-1">Expert in DNS, Cloud Infrastructure, and Open-Source Development</p>
+    </header>
+
+    <main class="max-w-4xl mx-auto my-12 px-4">
+        <!-- Summary Section -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold border-b-2 border-gray-300 pb-2 mb-4">Summary</h2>
+            <p>Technical Marketing Engineer with over 13 years of experience specializing in DNS, APIs, and cloud infrastructure. Proven ability to bridge technical expertise with business needs to deliver impactful solutions. Skilled in open-source development, customer success, and driving product innovation.</p>
+        </section>
+
+        <!-- Skills Section -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold border-b-2 border-gray-300 pb-2 mb-4">Skills</h2>
+            <ul class="list-disc ml-8">
+                <li><strong>Programming & Scripting:</strong> Python, Node, Shell</li>
+                <li><strong>Frameworks & Tools:</strong> Flask, React, Docker, Kubernetes, Selenium, Proxmox, Ansible, Terraform</li>
+                <li><strong>Cloud:</strong> AWS, Oracle</li>
+                <li><strong>Networking & DNS:</strong> OpenWRT, BIND, Unbound, WireGuard</li>
+            </ul>
+        </section>
+
+        <!-- Links Section -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold border-b-2 border-gray-300 pb-2 mb-4">Find Me Online</h2>
+            <ul class="flex space-x-4">
+                <li>
+                    <a href="https://github.com/sbarbett" target="_blank" class="flex items-center">
+                        <img src="static/icons8-github-48.png" alt="GitHub" class="w-6 h-6 mr-2">
+                        GitHub
+                    </a>
+                </li>
+                <li>
+                    <a href="https://www.reddit.com/user/sbarbett/" target="_blank" class="flex items-center">
+                        <img src="static/icons8-reddit-48.png" alt="Reddit" class="w-6 h-6 mr-2">
+                        Reddit
+                    </a>
+                </li>
+                <li>
+                    <a href="https://www.linkedin.com/in/shane-barbetta-b1aab34b/" target="_blank" class="flex items-center">
+                        <img src="static/icons8-linkedin-48.png" alt="LinkedIn" class="w-6 h-6 mr-2">
+                        LinkedIn
+                    </a>
+                </li>
+                <li>
+                    <a href="https://blog.barbetta.me" target="_blank" class="flex items-center">
+                        <img src="static/icons8-blog-48.png" alt="Blog" class="w-6 h-6 mr-2">
+                        Blog
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Contact Form -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold border-b-2 border-gray-300 pb-2 mb-4">Contact Me</h2>
+            <form id="contactForm" class="space-y-4">
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">Your Name</label>
+                    <input type="text" id="name" name="name" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Your Email</label>
+                    <input type="email" id="email" name="email" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="message" class="block text-sm font-medium text-gray-700">Your Message</label>
+                    <textarea id="message" name="message" rows="4" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700">Send Message</button>
+            </form>
+            <p id="formFeedback" class="mt-4 text-sm"></p>
+        </section>
+
+    </main>
+
+    <footer class="text-center mt-12 text-gray-600">
+        <p>&copy; 2025 Shane Barbetta. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Handle form submission via AJAX
+        document.getElementById('contactForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission behavior
+
+            const formData = new FormData(this); // Gather form data
+            const data = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                message: formData.get('message')
+            };
+
+            fetch('/.netlify/functions/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(async (response) => {
+                const feedback = document.getElementById('formFeedback');
+                const responseData = await response.json();
+
+                if (response.ok) {
+                    feedback.textContent = responseData.message || 'Your message has been sent successfully!';
+                    feedback.className = 'text-green-600';
+                    // Clear the form
+                    document.getElementById('contactForm').reset();
+                } else {
+                    feedback.textContent = responseData.message || 'An unexpected error occurred. Please try again.';
+                    feedback.className = 'text-red-600';
+                }
+            })
+            .catch(() => {
+                const feedback = document.getElementById('formFeedback');
+                feedback.textContent = 'An unexpected error occurred. Please try again.';
+                feedback.className = 'text-red-600';
+            });
+        });
+    </script>
+
+</body>
+</html> 
